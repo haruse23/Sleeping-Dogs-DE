@@ -22,6 +22,7 @@ def LoadModel(data, mdlList):
     VertexBuffers_2 = {} # Mainly Weights Buffer
     VertexBuffers_3 = {} # Mainly UV Buffer
     ModelTableOffsets = []
+    BonePalettesOffsets = []
 
     while bs.tell() < len(data):
         print("Starting LoadModel...")
@@ -90,6 +91,8 @@ def LoadModel(data, mdlList):
             bs.seek(4, 1)
             BoneCount = bs.readUInt()
             
+            BonePalettesOffsets.append(curOffset)
+            
             print("Found Bone Palette at Offset {}, BoneCount is {}".format(curOffset, BoneCount))
             bs.seek(curOffset + ChunkSize, 0)
             
@@ -121,7 +124,19 @@ def LoadModel(data, mdlList):
     print("IndexBuffers found: " + str(len(IndexBuffers)) + ", VertexBuffers_1 found: " + str(len(VertexBuffers_1)) + ", VertexBuffers_3 found: " + str(len(VertexBuffers_3)))
     print("Model tables found: " + str(len(ModelTableOffsets)))
 
-        
+    BonePalettes = []  # list of dictionaries
+
+    for palette_index, B in enumerate(BonePalettesOffsets):
+        bs.seek(B, 0)
+        bs.seek(288, 1)
+
+        palette_dict = {}
+
+        for bone_index in range(BoneCount):
+            bone_name = bs.readBytes(64).decode("utf-8").rstrip('\x00')
+            palette_dict[bone_index] = bone_name
+
+        BonePalettes.append(palette_dict)
 
 
     for ModelIndex, ModelTableOffset in enumerate(ModelTableOffsets):
@@ -432,16 +447,19 @@ def LoadModel(data, mdlList):
         if meshList:
             Bones = []
 
-            for i in range(BoneCount):
-                m = NoeMat43()  # identity matrix
-                
-                Bone = NoeBone(i, "Bone_" + str(i), m, None, 0)
-                Bones.append(Bone)
+            for palette_index, palette in enumerate(BonePalettes):
+                for bone_index in range(BoneCount):
+                    m = NoeMat43()  # identity matrix
+
+                    bone_name = palette[bone_index]
+                    Bone = NoeBone(bone_index, bone_name, m, None, 0)
+                    Bones.append(Bone)
             
-            if Bones:
-                mdl = NoeModel(meshList, Bones)
-                
+            
+            mdl = NoeModel(meshList, Bones)
+            
             mdlList.append(mdl)
+            
         else:
             print("⚠ No valid meshes found; skipping model append.")
 
