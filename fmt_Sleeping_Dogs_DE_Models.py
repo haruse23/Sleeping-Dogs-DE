@@ -4,7 +4,7 @@ from inc_noesis import *
 import struct
 
 def registerNoesisTypes():
-    handle = noesis.register("Sleeping Dogs Model", ".binDE")
+    handle = noesis.register("Sleeping Dogs Definitive Edition Model", ".binDE")
     noesis.setHandlerTypeCheck(handle, checkType)
     noesis.setHandlerLoadModel(handle, LoadModel)
     return 1
@@ -31,14 +31,12 @@ def LoadModel(data, mdlList):
         ChunkID = bs.readUInt()
         bs.seek(4, 1)
         ChunkSize = bs.readUInt()
-        bs.seek(4, 1)
+        PaddingSize = bs.readUInt()
 
         curOffset = bs.tell()
         print("At offset " + str(curOffset) + ", ChunkID: " + str(ChunkID) + ", ChunkSize: " + str(ChunkSize))
-
-        pos = bs.tell()      
-        padding = (16 - (pos % 16)) % 16
-        bs.seek(padding, 1)
+        
+        bs.seek(PaddingSize, 1)
 
         if ChunkID == 2056721529:
             # Save buffer ID and current stream position
@@ -62,7 +60,7 @@ def LoadModel(data, mdlList):
                 
             elif "1.0" in BufferName:
                 VertexBuffers_2[BufferID] = bufferIDPos
-                print("Added VertexBuffer_3 ID " + str(BufferID) + " at pos " + str(bufferIDPos))
+                print("Added VertexBuffer_2 ID " + str(BufferID) + " at pos " + str(bufferIDPos))
 
             elif "2.0" in BufferName:
                 VertexBuffers_3[BufferID] = bufferIDPos
