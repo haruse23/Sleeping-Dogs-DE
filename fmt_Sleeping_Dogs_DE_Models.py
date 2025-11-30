@@ -77,6 +77,23 @@ def LoadModel(data, mdlList):
             print("Found ModelTable chunk at offset " + str(curOffset) + " (ModelCount=" + str(ModelCount) + ")")
 
             continue
+            
+            
+        elif ChunkID == 2552518363:
+            # Save buffer ID and current stream position
+            bs.seek(24, 1)
+            bufferIDPos = bs.tell()
+            BufferID = bs.readUInt()
+            bs.seek(24, 1)
+            BufferNameBytes = bs.readBytes(36)
+            BufferName = BufferNameBytes.decode('utf-8', errors='ignore').rstrip('\x00')    
+            bs.seek(4, 1)
+            BoneCount = bs.readUInt()
+            
+            print("Found Bone Palette at Offset {}, BoneCount is {}".format(curOffset, BoneCount))
+            bs.seek(curOffset + ChunkSize, 0)
+            
+            
 
         elif ChunkID == 3925339657:
             bs.seek(curOffset + ChunkSize, 0)
@@ -401,6 +418,7 @@ def LoadModel(data, mdlList):
                         UVs0.append(NoeVec3([U, V, 0.0]))
 
             # === Build mesh ===
+           
 
             mesh = NoeMesh(Indices, Positions, "mesh_{}_{}".format(ModelIndex, i))
             mesh.setNormals(Normals)
@@ -412,7 +430,18 @@ def LoadModel(data, mdlList):
 
             
         if meshList:
-            mdlList.append(NoeModel(meshList))
+            Bones = []
+
+            for i in range(BoneCount):
+                m = NoeMat43()  # identity matrix
+                
+                Bone = NoeBone(i, "Bone_" + str(i), m, None, 0)
+                Bones.append(Bone)
+            
+            if Bones:
+                mdl = NoeModel(meshList, Bones)
+                
+            mdlList.append(mdl)
         else:
             print("⚠ No valid meshes found; skipping model append.")
 
