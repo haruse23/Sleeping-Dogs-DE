@@ -335,12 +335,12 @@ def WriteTexture(data, Width, Height, bs):
         bs.writeBytes(b'\x00' * 168)
 
     baseName = os.path.splitext(rapi.getOutputName())[0]
-    dataFilePathSD = baseName + ".sd"
+    dataFilePathSD = baseName + ".sdde"
     with open(dataFilePathSD, "wb") as f:
         f.write(bs.getBuffer())
 
 
-    dataFilePathSD2 = baseName + ".sd2"
+    dataFilePathSD2 = baseName + ".sdde2"
     dataBS = NoeBitStream()
 
     FileID = ud.get("FileID")
@@ -363,5 +363,6 @@ def WriteTexture(data, Width, Height, bs):
     with open(dataFilePathSD2, "wb") as f:
         f.write(dataBS.getBuffer())
             
+
 
     return 1
